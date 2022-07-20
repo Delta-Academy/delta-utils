@@ -42,7 +42,7 @@ def get_local_imports(folder_path) -> Set:
             continue
         path = Path(module.__file__)
         # Module is in this folder
-        if Path(os.path.commonprefix([folder_path, path])) == folder_path:
+        if path.parent == folder_path:
             local_imports.add(path.stem)
     return local_imports
 
