@@ -129,20 +129,18 @@ def check_submission(
         pkl_file is not None
         and expected_pkl_type is not None
         and pkl_checker_function is not None
-    ):
+    ):  # lol mypy
         try:
             assert isinstance(
                 pkl_file, expected_pkl_type
             ), f"The .pkl file you saved is the wrong type! It should be a {expected_pkl_type}"
             pkl_checker_function(pkl_file)
+            action = choose_move(example_state, pkl_file)
         except FileNotFoundError as e:
             raise FileNotFoundError(
                 f"Value dictionary file called 'dict_{team_name}.pkl' cannot be found! "
                 f"Check the file exists & that the name matches."
             ) from e
-
-    if pkl_file is not None:
-        action = choose_move(example_state, pkl_file)
     else:
         action = choose_move(example_state)
 
