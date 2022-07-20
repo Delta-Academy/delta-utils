@@ -34,7 +34,7 @@ def hash_game_mechanics(path: Path) -> str:
     return sha256_file(path / "game_mechanics.py")
 
 
-def get_local_imports(folder_path: Path = HERE) -> Set:
+def get_local_imports(folder_path) -> Set:
     """Get the names of all files imported from folder_path."""
     local_imports = set()
     for module in sys.modules.values():
@@ -50,26 +50,30 @@ def get_local_imports(folder_path: Path = HERE) -> Set:
 def check_submission(
     example_state: Any,
     expected_choose_move_return_type: Type,
-    expected_pkl_type: Type,
-    pkl_checker_function: Callable,
     game_mechanics_hash: str,
     current_folder: Path,
     pkl_file: Optional[Any] = None,
+    expected_pkl_type: Optional[Type] = None,
+    pkl_checker_function: Optional[Callable] = None,
 ) -> None:
     """Checks a user submission is valid.
 
     Args:
         example_state (any): Example of the argument to the user's choose_move function
-        pickle_loader (Callable): If the user's choose_move takes a second argument of stored
-                                  data (e.g. a value function), this is the function that loads
-                                  it
+        expected_choose_move_return_type (Type): of the users choose_move_function
+        game_mechanics_hash (str): sha256 hash of game_mechanics.py (see hash_game_mechanics())
+        current_folder (Path): The folder path of the user's game code (main.py etc)
+        pkl_file (any): The user's loaded pkl file (None if not using a stored pkl file)
+        expected_pkl_type (Type): Expected type of the above (None if not using a stored pkl file)
+        pkl_checker_function (callable): The function to check that pkl_file is valid
+                                         (None if not using a stored pkl file)
     """
     assert hash_game_mechanics(current_folder) == game_mechanics_hash, (
         "You've changed game_mechanics.py, please don't do this! :'( "
         "(if you can't escape this error message, reach out to us on slack)"
     )
 
-    local_imports = get_local_imports()
+    local_imports = get_local_imports(current_folder)
     valid_local_imports = {"__main__", "__init__", "game_mechanics", "check_submission"}
     assert local_imports.issubset(valid_local_imports), (
         f"You imported {local_imports - valid_local_imports}. "
@@ -121,7 +125,11 @@ def check_submission(
             f"please change this in file {file_name}.py to your team name!"
         )
 
-    if pkl_file is not None:
+    if (
+        pkl_file is not None
+        and expected_pkl_type is not None
+        and pkl_checker_function is not None
+    ):
         try:
             assert isinstance(
                 pkl_file, expected_pkl_type
