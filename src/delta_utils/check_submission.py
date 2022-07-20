@@ -29,23 +29,9 @@ def check_submission() -> None:
 """
 
 
-def pkl_checker_float_value_dictionary(pkl_file: Dict) -> None:
-    if isinstance(pkl_file, defaultdict):
-        assert not callable(
-            pkl_file.default_factory
-        ), "Please don't functions within default dictionaries!"
-
-    assert len(pkl_file) > 0
-
-    for v in pkl_file.values():
-        assert isinstance(
-            v, float
-        ), "Your value function dictionary values should be a float!"
-
-
-def hash_game_mechanics() -> str:
+def hash_game_mechanics(path: Path) -> str:
     """Call me to generate game_mechanics_hash."""
-    return sha256_file(HERE / "game_mechanics.py")
+    return sha256_file(path / "game_mechanics.py")
 
 
 def get_local_imports(folder_path: Path = HERE) -> Set:
@@ -67,7 +53,8 @@ def check_submission(
     expected_pkl_type: Type,
     pkl_checker_function: Callable,
     game_mechanics_hash: str,
-    pickle_loader: Optional[Callable[[str], Any]] = None,
+    current_folder: Path,
+    pkl_file: Optional[Any] = None,
 ) -> None:
     """Checks a user submission is valid.
 
@@ -77,20 +64,20 @@ def check_submission(
                                   data (e.g. a value function), this is the function that loads
                                   it
     """
-    assert hash_game_mechanics() == game_mechanics_hash, (
+    assert hash_game_mechanics(current_folder) == game_mechanics_hash, (
         "You've changed game_mechanics.py, please don't do this! :'( "
         "(if you can't escape this error message, reach out to us on slack)"
     )
 
     local_imports = get_local_imports()
-    valid_local_imports = {"__main__", "game_mechanics", "check_submission"}
+    valid_local_imports = {"__main__", "__init__", "game_mechanics", "check_submission"}
     assert local_imports.issubset(valid_local_imports), (
         f"You imported {local_imports - valid_local_imports}. "
         f"Please do not import local files other than "
         f"check_submission and game_mechanics into your main.py."
     )
 
-    mains = [entry for entry in os.scandir(HERE) if entry.name == "main.py"]
+    mains = [entry for entry in os.scandir(current_folder) if entry.name == "main.py"]
     assert len(mains) == 1, "You need a main.py file!"
     main = mains[0]
     assert main.is_file(), "main.py isn't a Python file!"
@@ -134,9 +121,8 @@ def check_submission(
             f"please change this in file {file_name}.py to your team name!"
         )
 
-    if pickle_loader is not None:
+    if pkl_file is not None:
         try:
-            pkl_file = pickle_loader(team_name)
             assert isinstance(
                 pkl_file, expected_pkl_type
             ), f"The .pkl file you saved is the wrong type! It should be a {expected_pkl_type}"
@@ -147,7 +133,7 @@ def check_submission(
                 f"Check the file exists & that the name matches."
             ) from e
 
-    if pickle_loader is not None:
+    if pkl_file is not None:
         action = choose_move(example_state, pkl_file)
     else:
         action = choose_move(example_state)
@@ -170,3 +156,18 @@ def sha256_file(filename: Path) -> str:
         while n := f.readinto(mv):  # type: ignore
             h.update(mv[:n])
     return h.hexdigest()
+
+
+def pkl_checker_value_dict(pkl_file: Dict) -> None:
+    """Checks a dictionary acting as a value lookup table."""
+    if isinstance(pkl_file, defaultdict):
+        assert not callable(
+            pkl_file.default_factory
+        ), "Please don't use functions within default dictionaries in your pickle file!"
+
+    assert len(pkl_file) > 0, "Your dictionary is empty!"
+
+    for v in pkl_file.values():
+        assert isinstance(
+            v, float
+        ), "Your value function dictionary values should be a float!"
