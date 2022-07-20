@@ -2,11 +2,11 @@ import datetime
 import hashlib
 import os
 import sys
+from collections import defaultdict
 from pathlib import Path
-from typing import Any, Callable, Optional, Set, Type
+from typing import Any, Callable, Dict, Optional, Set, Type
 
 HERE = Path(__file__).parent.resolve()
-
 
 """
 Example usage (connect4)
@@ -27,6 +27,20 @@ def check_submission() -> None:
 
 
 """
+
+
+def pkl_checker_float_value_dictionary(pkl_file: Dict) -> None:
+    if isinstance(pkl_file, defaultdict):
+        assert not callable(
+            pkl_file.default_factory
+        ), "Please don't functions within default dictionaries!"
+
+    assert len(pkl_file) > 0
+
+    for v in pkl_file.values():
+        assert isinstance(
+            v, float
+        ), "Your value function dictionary values should be a float!"
 
 
 def hash_game_mechanics() -> str:
