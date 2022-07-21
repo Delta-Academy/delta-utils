@@ -1,6 +1,5 @@
 import datetime
 import hashlib
-import os
 import sys
 from collections import defaultdict
 from pathlib import Path
@@ -81,12 +80,11 @@ def check_submission(
         f"check_submission and game_mechanics into your main.py."
     )
 
-    mains = [entry for entry in os.scandir(current_folder) if entry.name == "main.py"]
-    assert len(mains) == 1, "You need a main.py file!"
-    main = mains[0]
+    main = current_folder / "main.py"
+    assert main.exists(), "You need a main.py file!"
     assert main.is_file(), "main.py isn't a Python file!"
 
-    file_name = main.name.split(".py")[0]
+    file_name = main.stem
 
     pre_import_time = datetime.datetime.now()
     mod = __import__(f"{file_name}", fromlist=["None"])
@@ -115,6 +113,7 @@ def check_submission(
         raise Exception(f"No TEAM_NAME found in file {file_name}.py") from e
 
     # Check TEAM_NAME isn't empty
+
     if len(team_name) == 0:
         raise ValueError(f"TEAM_NAME is empty in file {file_name}.py")
 
@@ -125,11 +124,11 @@ def check_submission(
             f"please change this in file {file_name}.py to your team name!"
         )
 
-    if (
-        pkl_file is not None
-        and expected_pkl_type is not None
-        and pkl_checker_function is not None
-    ):  # lol mypy
+    if pkl_file is not None:
+        assert expected_pkl_type is not None and pkl_checker_function is not None, (
+            "You must pass an arugment for expected_pkl_type "
+            "and pkl_checker_function if you pass a pkl_file"
+        )
         try:
             assert isinstance(
                 pkl_file, expected_pkl_type
@@ -148,20 +147,26 @@ def check_submission(
         f"Action output by `choose_move()` must be type {expected_choose_move_return_type}, "
         f"but instead {action} of type {type(action)} was output."
     )
-    print(
-        "Congratulations! Your Repl is ready to submit :)\n\n"
-        f"It'll be using value function file called 'dict_{team_name}.pkl'"
-    )
+    congrats_str = "Congratulations! Your Repl is ready to submit :)"
+    if pkl_file is not None:
+        congrats_str += (
+            f"It'll be using value function file called 'dict_{team_name}.pkl'"
+        )
+    print(congrats_str)
 
 
 def sha256_file(filename: Path) -> str:
-    h = hashlib.sha256()
-    b = bytearray(128 * 1024)
-    mv = memoryview(b)
+    """https://stackoverflow.com/a/44873382."""
+    hasher = hashlib.sha256()
+    # Create a memory buffer
+    buffer = bytearray(128 * 1024)
+    mv = memoryview(buffer)
     with open(filename, "rb", buffering=0) as f:
-        while n := f.readinto(mv):  # type: ignore
-            h.update(mv[:n])
-    return h.hexdigest()
+        # Read the file into the buffer, chunk by chunk
+        while chunk := f.readinto(mv):  # type: ignore
+            hasher.update(mv[:chunk])
+    # Hash the complete file
+    return hasher.hexdigest()
 
 
 def pkl_checker_value_dict(pkl_file: Dict) -> None:
@@ -173,7 +178,7 @@ def pkl_checker_value_dict(pkl_file: Dict) -> None:
 
     assert len(pkl_file) > 0, "Your dictionary is empty!"
 
-    for v in pkl_file.values():
+    for k, v in pkl_file.items():
         assert isinstance(
             v, (float, int)
-        ), "Your value function dictionary values should be a float!"
+        ), f"Your value function dictionary values should all be numbers, but for key {k}, the value {v} is of type {type(v)}!"
