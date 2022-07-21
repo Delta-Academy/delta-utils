@@ -1,20 +1,6 @@
 # IDE helpers
 .idea
 .vscode
-run.py
-
-# Custom
-src/**/competitor_code/team_*
-!src/**/competitor_code/team_winner.py
-src/**/competitor_code/*_network
-src/**/competitor_code/*.pt
-src/**/competitor_code/past_cohorts/
-src/**/competitor_code/*_network.pth
-!src/**/competitor_code/*winner_network.pth
-rankings/
-team_store/
-*.pkl
-!*winner.pkl
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
