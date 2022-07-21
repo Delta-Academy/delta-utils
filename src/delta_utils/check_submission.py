@@ -175,5 +175,5 @@ def pkl_checker_value_dict(pkl_file: Dict) -> None:
 
     for v in pkl_file.values():
         assert isinstance(
-            v, float
+            v, (float, int)
         ), "Your value function dictionary values should be a float!"
