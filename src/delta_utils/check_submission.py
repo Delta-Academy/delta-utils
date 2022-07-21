@@ -81,12 +81,11 @@ def check_submission(
         f"check_submission and game_mechanics into your main.py."
     )
 
-    mains = [entry for entry in os.scandir(current_folder) if entry.name == "main.py"]
-    assert len(mains) == 1, "You need a main.py file!"
-    main = mains[0]
+    main = current_folder / "main.py"
+    assert main.exists(), "You need a main.py file!"
     assert main.is_file(), "main.py isn't a Python file!"
 
-    file_name = main.name.split(".py")[0]
+    file_name = main.stem
 
     pre_import_time = datetime.datetime.now()
     mod = __import__(f"{file_name}", fromlist=["None"])
@@ -115,6 +114,7 @@ def check_submission(
         raise Exception(f"No TEAM_NAME found in file {file_name}.py") from e
 
     # Check TEAM_NAME isn't empty
+
     if len(team_name) == 0:
         raise ValueError(f"TEAM_NAME is empty in file {file_name}.py")
 
