@@ -124,7 +124,7 @@ def check_submission(
             f"please change this in file {file_name}.py to your team name!"
         )
 
-    if pkl_file is not None:  # lol mypy
+    if pkl_file is not None:
         assert expected_pkl_type is not None and pkl_checker_function is not None, (
             "You must pass an arugment for expected_pkl_type "
             "and pkl_checker_function if you pass a pkl_file"
