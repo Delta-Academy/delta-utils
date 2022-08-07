@@ -73,7 +73,13 @@ def check_submission(
     )
 
     local_imports = get_local_imports(current_folder)
-    valid_local_imports = {"__main__", "__init__", "game_mechanics", "check_submission"}
+    valid_local_imports = {
+        "__main__",
+        "__init__",
+        "game_mechanics",
+        "check_submission",
+        "main",
+    }
     assert local_imports.issubset(valid_local_imports), (
         f"You imported {local_imports - valid_local_imports}. "
         f"Please do not import local files other than "
