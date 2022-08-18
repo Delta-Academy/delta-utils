@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "delta-utils"
-version = "0.0.5"
+version = "0.0.9"
 authors = [
   { name="neuromantic99", email="james@learney.me" },
 ]
@@ -12,7 +12,7 @@ description = "Utility tools for Delta Academy tournaments"
 
 readme = "README.md"
 license = { file="LICENSE" }
-requires-python = "==3.8"
+requires-python = ">=3.8"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",

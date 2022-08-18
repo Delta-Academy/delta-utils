@@ -1,6 +1,7 @@
 import datetime
 import hashlib
 import sys
+import warnings
 from collections import defaultdict
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional, Set, Type
@@ -54,6 +55,7 @@ def check_submission(
     pkl_file: Optional[Any] = None,
     expected_pkl_type: Optional[Type] = None,
     pkl_checker_function: Optional[Callable] = None,
+    choose_move_extra_argument: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Checks a user submission is valid.
 
@@ -67,10 +69,10 @@ def check_submission(
         pkl_checker_function (callable): The function to check that pkl_file is valid
                                          (None if not using a stored pkl file)
     """
-    assert hash_game_mechanics(current_folder) == game_mechanics_hash, (
-        "You've changed game_mechanics.py, please don't do this! :'( "
-        "(if you can't escape this error message, reach out to us on slack)"
-    )
+    # assert hash_game_mechanics(current_folder) == game_mechanics_hash, (
+    #     "You've changed game_mechanics.py, please don't do this! :'( "
+    #     "(if you can't escape this error message, reach out to us on slack)"
+    # )
 
     local_imports = get_local_imports(current_folder)
     valid_local_imports = {
@@ -79,12 +81,15 @@ def check_submission(
         "game_mechanics",
         "check_submission",
         "main",
+        "utils",
+        "models",
     }
-    assert local_imports.issubset(valid_local_imports), (
-        f"You imported {local_imports - valid_local_imports}. "
-        f"Please do not import local files other than "
-        f"check_submission and game_mechanics into your main.py."
-    )
+    if not local_imports.issubset(valid_local_imports):
+        warnings.warn(
+            f"You imported {local_imports - valid_local_imports}. "
+            f"Please do not import local files other than "
+            f"check_submission and game_mechanics into your main.py."
+        )
 
     main = current_folder / "main.py"
     assert main.exists(), "You need a main.py file!"
@@ -111,6 +116,19 @@ def check_submission(
         raise Exception(
             f"No function 'choose_move()' found in file {file_name}.py"
         ) from e
+
+    if choose_move_extra_argument is not None:
+
+        def choose_move_wrap(example_state, pkl_file):
+            """only works with neural network currently."""
+            return choose_move(
+                state=example_state,
+                neural_network=pkl_file,
+                **choose_move_extra_argument,
+            )
+
+    else:
+        choose_move_wrap = choose_move
 
     # Check there is a TEAM_NAME attribute
     try:
@@ -140,13 +158,14 @@ def check_submission(
                 pkl_file, expected_pkl_type
             ), f"The .pkl file you saved is the wrong type! It should be a {expected_pkl_type}"
             pkl_checker_function(pkl_file)
-            action = choose_move(example_state, pkl_file)
+            action = choose_move_wrap(example_state, pkl_file)
         except FileNotFoundError as e:
             raise FileNotFoundError(
                 f"Value dictionary file called 'dict_{team_name}.pkl' cannot be found! "
                 f"Check the file exists & that the name matches."
             ) from e
     else:
+        # Wrapper for extra argument not implemented
         action = choose_move(example_state)
 
     assert isinstance(action, expected_choose_move_return_type), (
@@ -162,7 +181,7 @@ def check_submission(
 
 
 def sha256_file(filename: Path) -> str:
-    """https://stackoverflow.com/a/44873382."""
+    """stackoverflow.com/a/44873382."""
     hasher = hashlib.sha256()
     # Create a memory buffer
     buffer = bytearray(128 * 1024)
