@@ -122,7 +122,6 @@ def check_submission(
         def choose_move_wrap(example_state, pkl_file):
             """only works with neural network currently."""
             return choose_move(
-                state=example_state,
                 neural_network=pkl_file,
                 **choose_move_extra_argument,
             )
