@@ -4,7 +4,7 @@ import sys
 import warnings
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional, Set, Type
+from typing import Any, Callable, Dict, Optional, Set, Tuple, Type, Union
 
 HERE = Path(__file__).parent.resolve()
 
@@ -53,7 +53,7 @@ def check_submission(
     game_mechanics_hash: str,
     current_folder: Path,
     pkl_file: Optional[Any] = None,
-    expected_pkl_type: Optional[Type] = None,
+    expected_pkl_type: Union[None, Type, Tuple[Type, ...]] = None,
     pkl_checker_function: Optional[Callable] = None,
     choose_move_extra_argument: Optional[Dict[str, Any]] = None,
 ) -> None:
@@ -69,10 +69,10 @@ def check_submission(
         pkl_checker_function (callable): The function to check that pkl_file is valid
                                          (None if not using a stored pkl file)
     """
-    # assert hash_game_mechanics(current_folder) == game_mechanics_hash, (
-    #     "You've changed game_mechanics.py, please don't do this! :'( "
-    #     "(if you can't escape this error message, reach out to us on slack)"
-    # )
+    assert hash_game_mechanics(current_folder) == game_mechanics_hash, (
+        "You've changed game_mechanics.py, please don't do this! :'( "
+        "(if you can't escape this error message, reach out to us on slack)"
+    )
 
     local_imports = get_local_imports(current_folder)
     valid_local_imports = {
@@ -122,6 +122,7 @@ def check_submission(
         def choose_move_wrap(example_state, pkl_file):
             """only works with neural network currently."""
             return choose_move(
+                example_state,
                 neural_network=pkl_file,
                 **choose_move_extra_argument,
             )
