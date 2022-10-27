@@ -34,19 +34,6 @@ def hash_game_mechanics(path: Path) -> str:
     return sha256_file(path / "game_mechanics.py")
 
 
-def get_local_imports(folder_path) -> Set:
-    """Get the names of all files imported from folder_path."""
-    local_imports = set()
-    for module in sys.modules.values():
-        if not hasattr(module, "__file__") or module.__file__ is None:
-            continue
-        path = Path(module.__file__)
-        # Module is in this folder
-        if path.parent == folder_path:
-            local_imports.add(path.stem)
-    return local_imports
-
-
 def check_submission(
     example_state: Any,
     expected_choose_move_return_type: Type,
@@ -73,23 +60,6 @@ def check_submission(
         "You've changed game_mechanics.py, please don't do this! :'( "
         "(if you can't escape this error message, reach out to us on slack)"
     )
-
-    local_imports = get_local_imports(current_folder)
-    valid_local_imports = {
-        "__main__",
-        "__init__",
-        "game_mechanics",
-        "check_submission",
-        "main",
-        "utils",
-        "models",
-    }
-    if not local_imports.issubset(valid_local_imports):
-        warnings.warn(
-            f"You imported {local_imports - valid_local_imports}. "
-            f"Please do not import local files other than "
-            f"check_submission and game_mechanics into your main.py."
-        )
 
     main = current_folder / "main.py"
     assert main.exists(), "You need a main.py file!"
