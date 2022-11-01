@@ -6,7 +6,6 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional, Set, Tuple, Type, Union
 
-HERE = Path(__file__).parent.resolve()
 
 """
 Example usage (connect4)
