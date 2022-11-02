@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "delta-utils"
-version = "0.0.13"
+version = "0.0.14"
 authors = [
   { name="neuromantic99", email="james@learney.me" },
 ]
@@ -19,5 +19,21 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 
+[project.scripts]
+hash-game-mechanics = "delta_utils.hash_game_mechanics:main"
+
 [project.urls]
 "Homepage" = "https://github.com/Delta-Academy/delta-utils/"
+
+[tool.black]
+line-length = 100
+target-version = ['py38', 'py39']
+exclude = '''
+/(
+    competitor_code/team_[0-9]*\.py
+    venv.*
+    \.eggs
+  | \.git
+  | \.mypy_cache
+)/
+'''
