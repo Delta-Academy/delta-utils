@@ -48,8 +48,10 @@ def main() -> None:
     path = find_file("game_mechanics.py").parent
 
     # Run checks for whether this is valid
-    both_files_present = len(args.filenames) == 2 and all(
-        Path(filename).name in tracked_files for filename in args.filenames
+    filenames = [Path(filename).name for filename in args.filenames]
+    file_changes_legal = (
+        all(filename in tracked_files for filename in filenames)
+        and "game_mechanics_hash.txt" in filenames
     )
     file_exists = (path / "game_mechanics_hash.txt").exists()
     hashes_match = (
@@ -57,7 +59,7 @@ def main() -> None:
     )
 
     # If it's all fine and dandy then return
-    if both_files_present and file_exists and hashes_match:
+    if file_changes_legal and file_exists and hashes_match:
         print("game_mechanics.py has not been changed")
         return
 
@@ -67,7 +69,7 @@ def main() -> None:
         f.write(game_mechanics_hash)
 
     # Spit out debugging messages
-    if not both_files_present:
+    if not file_changes_legal:
         print(
             f"Only changes to {args.filenames} were committed.\n"
             f"You must commit both game_mechanics.py and game_mechanics_hash.txt when either is changed"
