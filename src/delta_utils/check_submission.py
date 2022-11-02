@@ -1,10 +1,10 @@
 import datetime
-import hashlib
-import sys
 import warnings
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional, Set, Tuple, Type, Union
+from typing import Any, Callable, Dict, Optional, Tuple, Type, Union
+
+from delta_utils.hash_game_mechanics import hash_game_mechanics, load_game_mechanics_hash
 
 
 """
@@ -28,34 +28,35 @@ def check_submission() -> None:
 """
 
 
-def hash_game_mechanics(path: Path) -> str:
-    """Call me to generate game_mechanics_hash."""
-    return sha256_file(path / "game_mechanics.py")
-
-
 def check_submission(
     example_state: Any,
     expected_choose_move_return_type: Type,
-    game_mechanics_hash: str,
     current_folder: Path,
     pkl_file: Optional[Any] = None,
     expected_pkl_type: Union[None, Type, Tuple[Type, ...]] = None,
     pkl_checker_function: Optional[Callable] = None,
     choose_move_extra_argument: Optional[Dict[str, Any]] = None,
+    game_mechanics_hash: Optional[str] = None,
 ) -> None:
     """Checks a user submission is valid.
 
     Args:
         example_state (any): Example of the argument to the user's choose_move function
         expected_choose_move_return_type (Type): of the users choose_move_function
-        game_mechanics_hash (str): sha256 hash of game_mechanics.py (see hash_game_mechanics())
         current_folder (Path): The folder path of the user's game code (main.py etc)
         pkl_file (any): The user's loaded pkl file (None if not using a stored pkl file)
         expected_pkl_type (Type): Expected type of the above (None if not using a stored pkl file)
         pkl_checker_function (callable): The function to check that pkl_file is valid
                                          (None if not using a stored pkl file)
+        game_mechanics_hash (str): DEPRECATED sha256 hash of game_mechanics.py (see
+                                    hash_game_mechanics())
     """
-    assert hash_game_mechanics(current_folder) == game_mechanics_hash, (
+    if game_mechanics_hash is not None:
+        warnings.warn(
+            "game_mechanics_hash is deprecated, please remove this argument from check_submission()",
+            DeprecationWarning,
+        )
+    assert hash_game_mechanics(current_folder) == load_game_mechanics_hash(current_folder), (
         "You've changed game_mechanics.py, please don't do this! :'( "
         "(if you can't escape this error message, reach out to us on slack)"
     )
@@ -82,9 +83,7 @@ def check_submission(
     try:
         choose_move = getattr(mod, "choose_move")
     except AttributeError as e:
-        raise Exception(
-            f"No function 'choose_move()' found in file {file_name}.py"
-        ) from e
+        raise Exception(f"No function 'choose_move()' found in file {file_name}.py") from e
 
     if choose_move_extra_argument is not None:
 
@@ -143,24 +142,8 @@ def check_submission(
     )
     congrats_str = "Congratulations! Your Repl is ready to submit :)"
     if pkl_file is not None:
-        congrats_str += (
-            f"It'll be using value function file called 'dict_{team_name}.pkl'"
-        )
+        congrats_str += f"It'll be using value function file called 'dict_{team_name}.pkl'"
     print(congrats_str)
-
-
-def sha256_file(filename: Path) -> str:
-    """stackoverflow.com/a/44873382."""
-    hasher = hashlib.sha256()
-    # Create a memory buffer
-    buffer = bytearray(128 * 1024)
-    mv = memoryview(buffer)
-    with open(filename, "rb", buffering=0) as f:
-        # Read the file into the buffer, chunk by chunk
-        while chunk := f.readinto(mv):  # type: ignore
-            hasher.update(mv[:chunk])
-    # Hash the complete file
-    return hasher.hexdigest()
 
 
 def pkl_checker_value_dict(pkl_file: Dict) -> None:
