@@ -29,6 +29,7 @@ def find_file(filename: str) -> Path:
             continue
 
         # Search all ancestors
-        if paths := list(filter(lambda x: x.name == filename, item.rglob("*"))):
+        paths = list(filter(lambda x: x.name == filename, item.rglob("*")))
+        if paths:
             return paths[0]
     raise FileNotFoundError(f"Could not find {filename}")
