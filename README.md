@@ -6,7 +6,7 @@
 pip install delta-utils
 ```
 
-## To deploy to pypy
+## To deploy to PyPI
 
 First increase the version number in pyproject.toml (e.g. 0.0.13 -> 0.0.14)
 
@@ -15,7 +15,6 @@ First increase the version number in pyproject.toml (e.g. 0.0.13 -> 0.0.14)
 python3 -m pip install --upgrade build
 python3 -m build
 python3 -m pip install --upgrade twine
-twine upload --skip-existing dist/*   
+twine upload --skip-existing dist/*
 
 ```
-

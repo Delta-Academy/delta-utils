@@ -83,7 +83,7 @@ def check_submission(
     try:
         choose_move = getattr(mod, "choose_move")
     except AttributeError as e:
-        raise Exception(f"No function 'choose_move()' found in file {file_name}.py") from e
+        raise AttributeError(f"No function 'choose_move()' found in file {file_name}.py") from e
 
     if choose_move_extra_argument is not None:
 
