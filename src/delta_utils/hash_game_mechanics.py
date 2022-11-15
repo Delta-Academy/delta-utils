@@ -2,7 +2,8 @@ import argparse
 import hashlib
 from pathlib import Path
 
-from delta_utils.utils import find_file
+from delta_utils.utils import find_file, find_folder
+from dirhash import dirhash
 
 
 def sha256_file(filename: Path) -> str:
@@ -21,7 +22,10 @@ def sha256_file(filename: Path) -> str:
 
 def hash_game_mechanics(path: Path) -> str:
     """Call me to generate game_mechanics_hash."""
-    return sha256_file(path / "game_mechanics.py")
+    if path.is_file():
+        return sha256_file(path / "game_mechanics.py")
+    else:
+        return dirhash(directory=path, algorithm="sha256", match=["*.py"])
 
 
 def load_game_mechanics_hash(path: Path) -> str:
@@ -45,6 +49,12 @@ def main() -> None:
     args = parser.parse_args()
 
     # Find the right directory
+    try:
+        path = find_file("game_mechanics.py").parent
+        is_folder = False
+    except FileNotFoundError:
+        path = find_folder("game_mechanics")
+        is_folder = True
     path = find_file("game_mechanics.py").parent
 
     # Run checks for whether this is valid
@@ -59,7 +69,7 @@ def main() -> None:
     )
 
     # If it's all fine and dandy then return
-    if file_changes_legal and file_exists and hashes_match:
+    if (file_changes_legal or is_folder) and file_exists and hashes_match:
         print("game_mechanics.py has not been changed")
         return
 
