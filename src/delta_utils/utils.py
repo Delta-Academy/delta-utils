@@ -17,14 +17,15 @@ def get_current_dir():
     return Path("").resolve()
 
 
-def find_file(filename: str) -> Path:
-    """Find game_mechanics.py within all child directories of the directory this is run from."""
+def find(name: str) -> Path:
+    """Find file or directory with name `name` within all child directories of the directory this is
+    run from."""
     # Gets directory we're running from
     path = get_current_dir()
 
     # Checks current directory
-    if (path / filename).exists():
-        return path / filename
+    if (path / name).exists():
+        return path / name
     # Checks all child directories
     for item in path.iterdir():
         # Skip files and directories we don't want to search
@@ -32,28 +33,8 @@ def find_file(filename: str) -> Path:
             continue
 
         # Search all ancestors
-        paths = list(filter(lambda x: x.name == filename, item.rglob("*")))
+        paths = list(filter(lambda x: x.stem == name, item.rglob("*")))
         if paths:
             return paths[0]
-    raise FileNotFoundError(f"Could not find {filename}")
 
-
-def find_folder(folder_name: str) -> Path:
-
-    path = get_current_dir()
-    end_me = False
-    for p in path.rglob("*"):
-
-        for dont in DONT_SEARCH:
-            if dont in str(p):
-                end_me = True
-                break
-
-        if end_me:
-            end_me = False
-            continue
-
-        if p.name == folder_name and p.is_dir() and p not in DONT_SEARCH:
-            return p
-
-    raise FileNotFoundError(f"Could not find folder {folder_name}")
+    raise FileNotFoundError(f"Could not find {name}")
