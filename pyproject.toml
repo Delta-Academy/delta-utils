@@ -11,8 +11,9 @@ authors = [
 description = "Utility tools for Delta Academy tournaments"
 
 readme = "README.md"
-license = { file="LICENSE" }
+license = "GPL-3.0-only"
 requires-python = ">=3.8"
+dependencies = [ "dirhash" ]
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
