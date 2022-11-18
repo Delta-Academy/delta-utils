@@ -2,7 +2,7 @@ import argparse
 import hashlib
 from pathlib import Path
 
-from delta_utils.utils import find_file, find_folder
+from delta_utils.utils import find
 from dirhash import dirhash
 
 
@@ -40,7 +40,7 @@ def main() -> None:
     Designed to also work being run as a pre-commit hook.
     """
     # Committed files get parsed as arguments to the pre-commit hook
-    tracked_files = ["game_mechanics.py", "game_mechanics_hash.txt"]
+    tracked_files = ["game_mechanics.py", "game_mechanics_hash.txt", "game_mechanics"]
     parser = argparse.ArgumentParser(
         prog="Hash Game Mechanics Script",
         description="Hashes game_mechanics.py and stores it in game_mechanics_hash.txt",
@@ -48,17 +48,17 @@ def main() -> None:
     parser.add_argument("filenames", default=tracked_files, nargs="*")
     args = parser.parse_args()
 
-    # Find the right directory
-    try:
-        path = find_file("game_mechanics.py").parent
-        is_folder = False
-    except FileNotFoundError:
-        path = find_folder("game_mechanics")
-        is_folder = True
-    path = find_file("game_mechanics.py").parent
+    # Find the file/directory
+    path = find("game_mechanics")
+    is_dir = path.is_dir()
+    path = path if is_dir else path.parent
 
     # Run checks for whether this is valid
-    filenames = [Path(filename).name for filename in args.filenames]
+    filenames = [
+        Path(name).parent.name if is_dir and Path(name).suffix != ".txt" else Path(name).name
+        for name in args.filenames
+    ]
+    # We want to check that the user has changed game_mechanics_hash.txt - this is skipped if not
     file_changes_legal = (
         all(filename in tracked_files for filename in filenames)
         and "game_mechanics_hash.txt" in filenames
@@ -69,7 +69,7 @@ def main() -> None:
     )
 
     # If it's all fine and dandy then return
-    if (file_changes_legal or is_folder) and file_exists and hashes_match:
+    if file_changes_legal and file_exists and hashes_match:
         print("game_mechanics.py has not been changed")
         return
 
@@ -90,4 +90,5 @@ def main() -> None:
         print("game_mechanics_hash.txt does not match the hash of the current game_mechanics.py")
     print(f"Saved hash in {path / 'game_mechanics_hash.txt'}")
 
+    # This tells pre-commit that the hook was unsuccessful :'(
     exit(1)
