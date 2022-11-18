@@ -82,7 +82,7 @@ def main() -> None:
     if not file_changes_legal:
         print(
             f"Only changes to {args.filenames} were committed.\n"
-            f"You must commit both game_mechanics.py and game_mechanics_hash.txt when either is changed"
+            f"You must commit both game_mechanics files and game_mechanics_hash.txt when either is changed"
         )
     if not file_exists:
         print("game_mechanics_hash.txt does not exist")
