@@ -2,8 +2,9 @@ import argparse
 import hashlib
 from pathlib import Path
 
-from delta_utils.utils import find
 from dirhash import dirhash
+
+from delta_utils.utils import find
 
 
 def sha256_file(filename: Path) -> str:
@@ -22,7 +23,7 @@ def sha256_file(filename: Path) -> str:
 
 def hash_game_mechanics(path: Path) -> str:
     """Call me to generate game_mechanics_hash."""
-    if path.is_file():
+    if (path / "game_mechanics.py").exists():
         return sha256_file(path / "game_mechanics.py")
     else:
         return dirhash(directory=path, algorithm="sha256", match=["*.py"])
