@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "delta-utils"
-version = "0.0.16"
+version = "0.0.17"
 authors = [
   { name="neuromantic99", email="james@learney.me" },
 ]

@@ -56,7 +56,19 @@ def check_submission(
             "game_mechanics_hash is deprecated, please remove this argument from check_submission()",
             DeprecationWarning,
         )
-    assert hash_game_mechanics(current_folder) == load_game_mechanics_hash(current_folder), (
+
+    if (current_folder / "game_mechanics_hash.txt").exists():
+        game_mechanics_path = current_folder
+    elif (current_folder / "game_mechanics" / "game_mechanics_hash.txt").exists():
+        game_mechanics_path = current_folder / "game_mechanics"
+    else:
+        raise FileNotFoundError(
+            f"game_mechanics_hash.txt not found in {current_folder} or {current_folder / 'game_mechanics'}"
+        )
+
+    assert hash_game_mechanics(game_mechanics_path) == load_game_mechanics_hash(
+        game_mechanics_path
+    ), (
         "You've changed game_mechanics.py, please don't do this! :'( "
         "(if you can't escape this error message, reach out to us on slack)"
     )
