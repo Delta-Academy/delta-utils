@@ -2,9 +2,8 @@ import argparse
 import hashlib
 from pathlib import Path
 
-from dirhash import dirhash
-
 from delta_utils.utils import find
+from dirhash import dirhash
 
 
 def sha256_file(filename: Path) -> str:
