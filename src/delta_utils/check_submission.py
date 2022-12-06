@@ -99,13 +99,25 @@ def check_submission(
 
     if choose_move_extra_argument is not None:
 
-        def choose_move_wrap(example_state, pkl_file):
-            """only works with neural network currently."""
-            return choose_move(
-                example_state,
-                neural_network=pkl_file,
-                **choose_move_extra_argument,
-            )
+        # Dear god this needs refactoring
+        if pkl_file is not None:
+
+            def choose_move_wrap(example_state, pkl_file):
+                """only works with neural network currently."""
+                return choose_move(
+                    example_state,
+                    neural_network=pkl_file,
+                    **choose_move_extra_argument,
+                )
+
+        else:
+
+            def choose_move_wrap(example_state):
+                """only works with neural network currently."""
+                return choose_move(
+                    example_state,
+                    **choose_move_extra_argument,
+                )
 
     else:
         choose_move_wrap = choose_move
@@ -146,7 +158,7 @@ def check_submission(
             ) from e
     else:
         # Wrapper for extra argument not implemented
-        action = choose_move(example_state)
+        action = choose_move_wrap(example_state)
 
     assert isinstance(action, expected_choose_move_return_type), (
         f"Action output by `choose_move()` must be type {expected_choose_move_return_type}, "
