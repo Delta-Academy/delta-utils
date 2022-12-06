@@ -6,7 +6,7 @@ DONT_SEARCH = [
     "__pycache__",
     "dist",
     "build",
-    "tests",
+    # "tests",
     ".idea",
     ".mypy_cache",
     ".pytest_cache",
@@ -23,13 +23,14 @@ def find(name: str) -> Path:
     # Gets directory we're running from
     path = get_current_dir()
 
-    # Checks current directory
-    if (path / name).exists():
-        return path / name
     # Checks all child directories
     for item in path.iterdir():
+        if item.is_file():
+            # Checks files in current directory match
+            if item.stem == name:
+                return item.resolve()
         # Skip files and directories we don't want to search
-        if item.name in DONT_SEARCH or item.is_file():
+        elif item.name in DONT_SEARCH:
             continue
 
         # Search all ancestors
