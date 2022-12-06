@@ -6,6 +6,7 @@ repos:
     hooks:
     -   id: check-yaml
     -   id: end-of-file-fixer
+        exclude: "game_mechanics_hash.txt"
     -   id: trailing-whitespace
 -   repo: https://github.com/myint/docformatter
     rev: v1.3.1

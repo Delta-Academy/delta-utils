@@ -6,7 +6,7 @@ DONT_SEARCH = [
     "__pycache__",
     "dist",
     "build",
-    # "tests",
+    "tests",
     ".idea",
     ".mypy_cache",
     ".pytest_cache",
