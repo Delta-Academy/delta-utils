@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any, Callable, Dict, Optional, Tuple, Type, Union
 
 from delta_utils.hash_game_mechanics import hash_game_mechanics, load_game_mechanics_hash
+from delta_utils.utils import find
 
 
 """
@@ -76,7 +77,7 @@ def check_submission(
         "(if you can't escape this error message, reach out to us on slack)"
     )
 
-    main = current_folder / "main.py"
+    main = find("main")
     assert main.exists(), "You need a main.py file!"
     assert main.is_file(), "main.py isn't a Python file!"
 
