@@ -1,6 +1,6 @@
 import datetime
+import inspect
 import warnings
-from collections import defaultdict
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional, Tuple, Type, Union
 
@@ -10,52 +10,54 @@ from delta_utils.hash_game_mechanics import hash_game_mechanics, load_game_mecha
 """
 Example usage (connect4)
 
-def pkl_checker(pkl_file: Dict) -> None:
-    for v in pkl_file.values():
-        assert isinstance(v, float), "Your value function dictionary values should be a float!"
-
-
-def check_submission() -> None:
-
-    example_state = get_empty_board()
-    expected_choose_move_return_type = int
-    pickle_loader = load_dictionary
-    game_mechanics_hash = "1a5e3ad8dbd93fd9f3bd2212e1641ac969b827fce9ac185f7a9f0d13eeae6a1a"
-    expected_pkl_output_type = dict
-    pkl_checker_function = pkl_checker
-
-
+    check_submission(
+        example_choose_move_input = {"state": get_empty_board(), "pkl_file": user_pkl_file},
+        check_choose_move_output = get_discrete_choose_move_out_checker(possible_outputs = [0, 1, 2, 3, 4, 5, 6, 7]),
+        current_folder = Path(__file__).parent.resolve(),
+    )
 """
 
 
 def check_submission(
-    example_state: Any,
-    expected_choose_move_return_type: Type,
+    example_choose_move_input: Dict[str, Any],
+    check_choose_move_output: Callable[[Any], None],
     current_folder: Path,
+    # DEPRECATED:
+    example_state: Any = None,
+    expected_choose_move_return_type: Type = None,
     pkl_file: Optional[Any] = None,
     expected_pkl_type: Union[None, Type, Tuple[Type, ...]] = None,
     pkl_checker_function: Optional[Callable] = None,
     choose_move_extra_argument: Optional[Dict[str, Any]] = None,
-    game_mechanics_hash: Optional[str] = None,
 ) -> None:
     """Checks a user submission is valid.
 
     Args:
-        example_state (any): Example of the argument to the user's choose_move function
-        expected_choose_move_return_type (Type): of the users choose_move_function
-        current_folder (Path): The folder path of the user's game code (main.py etc)
-        pkl_file (any): The user's loaded pkl file (None if not using a stored pkl file)
-        expected_pkl_type (Type): Expected type of the above (None if not using a stored pkl file)
-        pkl_checker_function (callable): The function to check that pkl_file is valid
+        example_choose_move_input: dictionary of {argument_name: argument_value} for choose_move
+        check_choose_move_output: function to check the output of choose_move is valid
+        current_folder: The folder path of the user's game code (main.py etc)
+
+        DEPRECATED ARGS:
+        example_state: Example of the argument to the user's choose_move function
+        expected_choose_move_return_type: of the users choose_move_function
+        pkl_file: The user's loaded pkl file (None if not using a stored pkl file)
+        expected_pkl_type: Expected type of the above (None if not using a stored pkl file)
+        pkl_checker_function: The function to check that pkl_file is valid
                                          (None if not using a stored pkl file)
-        game_mechanics_hash (str): DEPRECATED sha256 hash of game_mechanics.py (see
-                                    hash_game_mechanics())
     """
-    if game_mechanics_hash is not None:
-        warnings.warn(
-            "game_mechanics_hash is deprecated, please remove this argument from check_submission()",
-            DeprecationWarning,
-        )
+    for arg in [
+        example_state,
+        expected_choose_move_return_type,
+        pkl_file,
+        expected_pkl_type,
+        pkl_checker_function,
+        choose_move_extra_argument,
+    ]:
+        if arg is not None:
+            warnings.warn(
+                f"{arg} is deprecated, please remove this argument from check_submission()",
+                DeprecationWarning,
+            )
 
     if (current_folder / "game_mechanics_hash.txt").exists():
         game_mechanics_path = current_folder
@@ -66,6 +68,7 @@ def check_submission(
             f"game_mechanics_hash.txt not found in {current_folder} or {current_folder / 'game_mechanics'}"
         )
 
+    # TODO: Add link to GitHub in this error message?
     assert hash_game_mechanics(game_mechanics_path) == load_game_mechanics_hash(
         game_mechanics_path
     ), (
@@ -97,31 +100,39 @@ def check_submission(
     except AttributeError as e:
         raise AttributeError(f"No function 'choose_move()' found in file {file_name}.py") from e
 
-    if choose_move_extra_argument is not None:
+    # Desiderata:
+    # 1. Check the signature matches
+    #     a) Check all args in the signature are in the example input
+    #     b) Check all args in the example input are in the signature
+    #     c) Check the types of all args are correct
+    # 2. Check the function runs without error
 
-        # Dear god this needs refactoring
-        if pkl_file is not None:
+    # Check the choose_move function signature matches the example inputs given
+    fn_signature = inspect.signature(choose_move)
 
-            def choose_move_wrap(example_state, pkl_file):
-                """only works with neural network currently."""
-                return choose_move(
-                    example_state,
-                    neural_network=pkl_file,
-                    **choose_move_extra_argument,
-                )
+    # Check the function signature has the correct arguments
+    for param in fn_signature.parameters.values():
+        assert param.name in example_choose_move_input, (
+            f"Your choose_move() function has unexpected argument '{param.name}'.\n\n"
+            f"The expected arguments are: {list(example_choose_move_input.keys())}\n\n"
+        )
+        if not isinstance(param.annotation, type(example_choose_move_input[param.name])):
+            warnings.warn(
+                f"Your choose_move() function has argument '{param.name}' with type annotation: '{param.annotation}'.\n\n"
+                f"The expected type of this argument is: {type(example_choose_move_input[param.name])}\n\n"
+            )
 
-        else:
+    # Check all arguments in the example input are in the signature
+    for param_name in example_choose_move_input:
+        assert param_name in fn_signature.parameters, (
+            f"Your choose_move() function is missing argument '{param_name}'.\n\n"
+            f"The expected arguments are: {list(example_choose_move_input.keys())}\n\n"
+        )
 
-            def choose_move_wrap(example_state):
-                """only works with neural network currently."""
-                return choose_move(
-                    example_state,
-                    **choose_move_extra_argument,
-                )
+    action = choose_move(**example_choose_move_input)
+    check_choose_move_output(action)
 
-    else:
-        choose_move_wrap = choose_move
-
+    # Least important checks at the bottom!
     # Check there is a TEAM_NAME attribute
     try:
         team_name = getattr(mod, "TEAM_NAME")
@@ -129,7 +140,6 @@ def check_submission(
         raise Exception(f"No TEAM_NAME found in file {file_name}.py") from e
 
     # Check TEAM_NAME isn't empty
-
     if len(team_name) == 0:
         raise ValueError(f"TEAM_NAME is empty in file {file_name}.py")
 
@@ -140,46 +150,4 @@ def check_submission(
             f"please change this in file {file_name}.py to your team name!"
         )
 
-    if pkl_file is not None:
-        assert expected_pkl_type is not None and pkl_checker_function is not None, (
-            "You must pass an arugment for expected_pkl_type "
-            "and pkl_checker_function if you pass a pkl_file"
-        )
-        try:
-            assert isinstance(
-                pkl_file, expected_pkl_type
-            ), f"The .pkl file you saved is the wrong type! It should be a {expected_pkl_type}"
-            pkl_checker_function(pkl_file)
-            action = choose_move_wrap(example_state, pkl_file)
-        except FileNotFoundError as e:
-            raise FileNotFoundError(
-                f"Value dictionary file called 'dict_{team_name}.pkl' cannot be found! "
-                f"Check the file exists & that the name matches."
-            ) from e
-    else:
-        # Wrapper for extra argument not implemented
-        action = choose_move_wrap(example_state)
-
-    assert isinstance(action, expected_choose_move_return_type), (
-        f"Action output by `choose_move()` must be type {expected_choose_move_return_type}, "
-        f"but instead {action} of type {type(action)} was output."
-    )
-    congrats_str = "Congratulations! Your Repl is ready to submit :)"
-    if pkl_file is not None:
-        congrats_str += f"It'll be using value function file called 'dict_{team_name}.pkl'"
-    print(congrats_str)
-
-
-def pkl_checker_value_dict(pkl_file: Dict) -> None:
-    """Checks a dictionary acting as a value lookup table."""
-    if isinstance(pkl_file, defaultdict):
-        assert not callable(
-            pkl_file.default_factory
-        ), "Please don't use functions within default dictionaries in your pickle file!"
-
-    assert len(pkl_file) > 0, "Your dictionary is empty!"
-
-    for k, v in pkl_file.items():
-        assert isinstance(
-            v, (float, int)
-        ), f"Your value function dictionary values should all be numbers, but for key {k}, the value {v} is of type {type(v)}!"
+    print("Congratulations! Your Repl is ready to submit :)")
