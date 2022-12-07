@@ -117,11 +117,11 @@ def check_submission(
             f"Your choose_move() function has unexpected argument '{param.name}'.\n\n"
             f"The expected arguments are: {list(example_choose_move_input.keys())}\n\n"
         )
-        if not isinstance(param.annotation, type(example_choose_move_input[param.name])):
-            warnings.warn(
-                f"Your choose_move() function has argument '{param.name}' with type annotation: '{param.annotation}'.\n\n"
-                f"The expected type of this argument is: {type(example_choose_move_input[param.name])}\n\n"
-            )
+        # if not isinstance(param.annotation, type(example_choose_move_input[param.name])):
+        #     warnings.warn(
+        #         f"Your choose_move() function has argument '{param.name}' with type annotation: '{param.annotation}'.\n\n"
+        #         f"The expected type of this argument is: {type(example_choose_move_input[param.name])}\n\n"
+        #     )
 
     # Check all arguments in the example input are in the signature
     for param_name in example_choose_move_input:
