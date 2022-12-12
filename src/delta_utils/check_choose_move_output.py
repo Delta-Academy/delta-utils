@@ -1,7 +1,7 @@
 from typing import Any, Callable, List
 
 
-def get_discrete_choose_move_out_checker(possible_outputs: List[int]) -> Callable[[Any], None]:
+def get_discrete_choose_move_out_checker(possible_outputs: List[Any]) -> Callable[[Any], None]:
     """Returns a function to check the output of choose_move is valid.
 
     Args:
